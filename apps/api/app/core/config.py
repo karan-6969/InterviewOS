@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     def assemble_database_url(cls, v: str) -> str:
         if not v or not isinstance(v, str):
             return v
-        cleaned = v.strip()
+        cleaned = v.strip().strip("\"'")
         if cleaned.startswith("postgres://"):
             cleaned = "postgresql+asyncpg://" + cleaned[len("postgres://"):]
         elif cleaned.startswith("postgresql://") and not cleaned.startswith("postgresql+asyncpg://"):
@@ -115,6 +115,13 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_URL: str = "redis://localhost:6379/0"
+
+    @field_validator("REDIS_URL", "SECRET_KEY", "GROQ_API_KEY", mode="before")
+    @classmethod
+    def clean_secrets(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.strip().strip("\"'")
+        return v
 
     # Storage (MinIO / S3)
     MINIO_ENDPOINT: str = "localhost:9000"
